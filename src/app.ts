@@ -1,6 +1,6 @@
 import express, { Application } from "express";
-import { routes } from ".routs/index.js";
-import { errorHandler } from ".errorHandler.js";
+import { routes } from "./routes";
+import { errorHandler } from "./middlewares/errorHandler";
 
 export function createApp(): Application {
   const app: Application = express();
