@@ -9,6 +9,7 @@ import { UsersModule } from './users/users.module';
 import { PatientsModule } from './patients/patients.module';
 import { DoctorsModule } from './doctors/doctors.module';
 import { WorkScheduleModule } from './work-schedule/work-schedule.module';
+import { CalendarModule } from './calendar/calendar.module';
 import { AppointmentsModule } from './appointments/appointments.module';
 import { HealthController } from './health.controller';
 
@@ -24,6 +25,7 @@ import { HealthController } from './health.controller';
     PatientsModule,
     DoctorsModule,
     WorkScheduleModule,
+    CalendarModule,
     AppointmentsModule,
   ],
   controllers: [HealthController],
