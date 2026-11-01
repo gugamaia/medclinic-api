@@ -166,3 +166,100 @@ describe('AppointmentsService.create (RF06/RF07/RN07-RN10)', () => {
     expect(result.patientId).toBe(1);
   });
 });
+
+describe('AppointmentsService.updateStatus (RN11/RN12)', () => {
+  let ctx: ReturnType<typeof buildService>;
+
+  beforeEach(() => {
+    ctx = buildService();
+  });
+
+  it('permite a transicao scheduled -> in_progress pelo proprio medico', async () => {
+    ctx.appointmentsRepository.findOneBy.mockResolvedValue({
+      id: 1,
+      doctorId: 1,
+      status: 'scheduled',
+    });
+    ctx.appointmentsRepository.save.mockImplementation((a: unknown) =>
+      Promise.resolve(a),
+    );
+
+    const result = await ctx.service.updateStatus(1, 'in_progress', {
+      id: 10,
+      roles: ['doctor'],
+    });
+
+    expect(result.status).toBe('in_progress');
+  });
+
+  it('rejeita transicao invalida (done -> scheduled) com TRANSICAO_INVALIDA', async () => {
+    ctx.appointmentsRepository.findOneBy.mockResolvedValue({
+      id: 1,
+      doctorId: 1,
+      status: 'done',
+    });
+
+    await expect(
+      ctx.service.updateStatus(1, 'scheduled', { id: 10, roles: ['doctor'] }),
+    ).rejects.toMatchObject({ code: 'TRANSICAO_INVALIDA' });
+  });
+
+  it('rejeita quando um medico tenta mudar o status de um agendamento de outro medico', async () => {
+    ctx.appointmentsRepository.findOneBy.mockResolvedValue({
+      id: 1,
+      doctorId: 1,
+      status: 'scheduled',
+    });
+
+    await expect(
+      ctx.service.updateStatus(1, 'in_progress', { id: 99, roles: ['doctor'] }),
+    ).rejects.toMatchObject({ code: 'ACESSO_NEGADO' });
+  });
+
+  it('permite que admin/secretary cancelem um agendamento de qualquer medico', async () => {
+    ctx.appointmentsRepository.findOneBy.mockResolvedValue({
+      id: 1,
+      doctorId: 1,
+      status: 'scheduled',
+    });
+    ctx.appointmentsRepository.save.mockImplementation((a: unknown) =>
+      Promise.resolve(a),
+    );
+
+    const result = await ctx.service.updateStatus(1, 'cancelled', {
+      id: 555,
+      roles: ['secretary'],
+    });
+
+    expect(result.status).toBe('cancelled');
+  });
+});
+
+describe('AppointmentsService.findById / list', () => {
+  let ctx: ReturnType<typeof buildService>;
+
+  beforeEach(() => {
+    ctx = buildService();
+  });
+
+  it('lanca RECURSO_NAO_ENCONTRADO quando o agendamento nao existe', async () => {
+    ctx.appointmentsRepository.findOneBy.mockResolvedValue(null);
+
+    await expect(ctx.service.findById(999)).rejects.toMatchObject({
+      code: 'RECURSO_NAO_ENCONTRADO',
+    });
+  });
+
+  it('lista agendamentos paginados aplicando o filtro recebido', async () => {
+    ctx.appointmentsRepository.listFiltered.mockResolvedValue([[], 0]);
+
+    const result = await ctx.service.list({ doctorId: 1 }, 1, 20);
+
+    expect(result.meta.total).toBe(0);
+    expect(ctx.appointmentsRepository.listFiltered).toHaveBeenCalledWith(
+      { doctorId: 1 },
+      1,
+      20,
+    );
+  });
+});
