@@ -1,7 +1,10 @@
+import { User } from '../../users/entities/user.entity';
+
 /**
  * Lista central de entidades. Tanto o DataSource da aplicacao quanto o
  * CLI de migrations importam esta mesma lista, para nunca ficarem
- * dessincronizados. Comeca vazia - cada modulo de dominio adiciona sua
- * propria entidade aqui conforme e criado.
+ * dessincronizados.
  */
-export const ENTITIES: Function[] = [];
+export const ENTITIES = [
+  User,
+];
