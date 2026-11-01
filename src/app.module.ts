@@ -11,6 +11,7 @@ import { DoctorsModule } from './doctors/doctors.module';
 import { WorkScheduleModule } from './work-schedule/work-schedule.module';
 import { CalendarModule } from './calendar/calendar.module';
 import { AppointmentsModule } from './appointments/appointments.module';
+import { MedicalRecordsModule } from './medical-records/medical-records.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -27,6 +28,7 @@ import { HealthController } from './health.controller';
     WorkScheduleModule,
     CalendarModule,
     AppointmentsModule,
+    MedicalRecordsModule,
   ],
   controllers: [HealthController],
   providers: [
