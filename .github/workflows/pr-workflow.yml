@@ -1,0 +1,30 @@
+name: PR - Validacao
+
+# Roda em todo pull request contra a main. O nome do job (build-and-test)
+# e estavel porque e ele que vira o check obrigatorio da protecao da branch.
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    name: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Build (nest build)
+        run: npm run build
+
+      - name: Testes unitarios
+        run: npm test

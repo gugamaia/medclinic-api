@@ -1,0 +1,27 @@
+version: '3.9'
+
+# Sobe um Postgres local para desenvolvimento. A API em si roda fora do
+# compose (npm run start:dev), apontando DB_HOST=localhost para este
+# container - mais rapido para iterar do que reconstruir a imagem a
+# cada mudanca de codigo.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: medclinic-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-medclinic}
+    ports:
+      - '${DB_PORT:-5432}:5432'
+    volumes:
+      - medclinic_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-postgres}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  medclinic_pgdata:
