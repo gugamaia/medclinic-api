@@ -103,7 +103,10 @@ export class WorkScheduleService {
       doctorId,
       shifts: shifts
         .slice()
-        .sort((a, b) => a.weekDay - b.weekDay || a.startTime.localeCompare(b.startTime))
+        .sort(
+          (a, b) =>
+            a.weekDay - b.weekDay || a.startTime.localeCompare(b.startTime),
+        )
         .map((s) => ({
           weekDay: s.weekDay,
           startTime: s.startTime,

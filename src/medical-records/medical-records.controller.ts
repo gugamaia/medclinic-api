@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { MedicalRecordsService } from './medical-records.service';
 import { CreateMedicalRecordDto } from './dto/create-medical-record.dto';
 import { ListMedicalRecordsQueryDto } from './dto/list-medical-records-query.dto';

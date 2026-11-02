@@ -37,7 +37,10 @@ export class AppointmentsController {
    * ignorando qualquer doctorId que venha na query string.
    */
   @Get()
-  async list(@Query() query: QueryAppointmentsDto, @CurrentUser() user: AuthUser) {
+  async list(
+    @Query() query: QueryAppointmentsDto,
+    @CurrentUser() user: AuthUser,
+  ) {
     const filter: {
       doctorId?: number;
       patientId?: number;
@@ -71,7 +74,10 @@ export class AppointmentsController {
     if (user.roles.includes('doctor') && !user.roles.includes('admin')) {
       const ownDoctor = await this.doctorsService.findByUserId(user.id);
       if (!ownDoctor || ownDoctor.id !== appointment.doctorId) {
-        throw new AppError('ACESSO_NEGADO', 'Voce nao tem acesso a este agendamento.');
+        throw new AppError(
+          'ACESSO_NEGADO',
+          'Voce nao tem acesso a este agendamento.',
+        );
       }
     }
 

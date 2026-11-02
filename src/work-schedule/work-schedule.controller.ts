@@ -1,4 +1,11 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Put,
+} from '@nestjs/common';
 import { WorkScheduleService } from './work-schedule.service';
 import { ReplaceWorkScheduleDto } from './dto/replace-work-schedule.dto';
 import { Roles } from '../auth/decorator/roles.decorator';

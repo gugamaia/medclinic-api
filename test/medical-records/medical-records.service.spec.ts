@@ -4,7 +4,9 @@ import { MedicalRecordsService } from '../../src/medical-records/medical-records
 function buildService() {
   const medicalRecordsRepository = {
     create: vi.fn((data: unknown) => data),
-    save: vi.fn((data: unknown) => Promise.resolve({ id: 1, createdAt: new Date(), ...(data as object) })),
+    save: vi.fn((data: unknown) =>
+      Promise.resolve({ id: 1, createdAt: new Date(), ...(data as object) }),
+    ),
     listByPatient: vi.fn(),
   };
   const appointmentsRepository = {

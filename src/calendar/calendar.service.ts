@@ -31,7 +31,10 @@ export class CalendarService {
       throw new AppError('DADOS_INVALIDOS', 'Parametros from/to invalidos.');
     }
     if (from > to) {
-      throw new AppError('DADOS_INVALIDOS', 'O parametro "from" deve ser anterior a "to".');
+      throw new AppError(
+        'DADOS_INVALIDOS',
+        'O parametro "from" deve ser anterior a "to".',
+      );
     }
 
     const rangeDays = (to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24);

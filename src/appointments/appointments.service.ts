@@ -6,7 +6,10 @@ import { timeToMinutes } from '../common/time-of-day';
 import { DoctorsService } from '../doctors/doctors.service';
 import { PatientsService } from '../patients/patients.service';
 import { WorkScheduleRepository } from '../work-schedule/work-schedule.repository';
-import { AppointmentsRepository, AppointmentFilter } from './appointments.repository';
+import {
+  AppointmentsRepository,
+  AppointmentFilter,
+} from './appointments.repository';
 import { Appointment, AppointmentStatus } from './entities/appointment.entity';
 import { Doctor } from '../doctors/entities/doctor.entity';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
@@ -78,7 +81,9 @@ export class AppointmentsService {
     await this.doctorsService.getOrFail(dto.doctorId);
     await this.patientsService.getOrFail(dto.patientId);
 
-    const shifts = await this.workScheduleRepository.findByDoctorId(dto.doctorId);
+    const shifts = await this.workScheduleRepository.findByDoctorId(
+      dto.doctorId,
+    );
     // Dia da semana e minutos do dia sao calculados em UTC, de proposito:
     // startsAt chega como timestamptz (RP05) e a escala (work_shift) nao
     // guarda fuso horario, entao fixar UTC como referencia unica evita
@@ -111,7 +116,9 @@ export class AppointmentsService {
       );
     }
 
-    const endsAt = new Date(startsAt.getTime() + shift.slotDurationMinutes * 60_000);
+    const endsAt = new Date(
+      startsAt.getTime() + shift.slotDurationMinutes * 60_000,
+    );
     const minutesOfDayEnd = minutesOfDay + shift.slotDurationMinutes;
     if (minutesOfDayEnd > shiftEnd) {
       throw new AppError(
@@ -138,7 +145,9 @@ export class AppointmentsService {
         .where('appointment.status IN (:...statuses)', {
           statuses: ['scheduled', 'in_progress', 'done'],
         })
-        .andWhere('appointment.doctor_id = :doctorId', { doctorId: dto.doctorId })
+        .andWhere('appointment.doctor_id = :doctorId', {
+          doctorId: dto.doctorId,
+        })
         .andWhere('appointment.starts_at < :endsAt', { endsAt })
         .andWhere('appointment.ends_at > :startsAt', { startsAt })
         .getMany();
@@ -155,7 +164,9 @@ export class AppointmentsService {
         .where('appointment.status IN (:...statuses)', {
           statuses: ['scheduled', 'in_progress', 'done'],
         })
-        .andWhere('appointment.patient_id = :patientId', { patientId: dto.patientId })
+        .andWhere('appointment.patient_id = :patientId', {
+          patientId: dto.patientId,
+        })
         .andWhere('appointment.starts_at < :endsAt', { endsAt })
         .andWhere('appointment.ends_at > :startsAt', { startsAt })
         .getMany();
@@ -189,13 +200,21 @@ export class AppointmentsService {
       page,
       pageSize,
     );
-    return paginate(items.map((a) => this.toResponseDto(a)), total, page, pageSize);
+    return paginate(
+      items.map((a) => this.toResponseDto(a)),
+      total,
+      page,
+      pageSize,
+    );
   }
 
   async findById(id: number): Promise<Appointment> {
     const appointment = await this.appointmentsRepository.findOneBy({ id });
     if (!appointment) {
-      throw new AppError('RECURSO_NAO_ENCONTRADO', 'Agendamento nao encontrado.');
+      throw new AppError(
+        'RECURSO_NAO_ENCONTRADO',
+        'Agendamento nao encontrado.',
+      );
     }
     return appointment;
   }
@@ -221,7 +240,9 @@ export class AppointmentsService {
       );
     }
 
-    if (!canApplyTransition(user, appointment.status, newStatus, doctor.userId)) {
+    if (
+      !canApplyTransition(user, appointment.status, newStatus, doctor.userId)
+    ) {
       throw new AppError(
         'ACESSO_NEGADO',
         'Voce nao tem permissao para aplicar esta transicao de status.',

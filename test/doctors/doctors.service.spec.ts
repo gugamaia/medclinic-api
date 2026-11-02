@@ -4,15 +4,19 @@ import { DoctorsService } from '../../src/doctors/doctors.service';
 function buildService() {
   const userRepo = {
     create: vi.fn((data: unknown) => data),
-    save: vi.fn((data: unknown) => Promise.resolve({ id: 10, ...(data as object) })),
+    save: vi.fn((data: unknown) =>
+      Promise.resolve({ id: 10, ...(data as object) }),
+    ),
   };
   const doctorRepo = {
     create: vi.fn((data: unknown) => data),
-    save: vi.fn((data: unknown) => Promise.resolve({ id: 20, ...(data as object) })),
+    save: vi.fn((data: unknown) =>
+      Promise.resolve({ id: 20, ...(data as object) }),
+    ),
   };
 
   const dataSource = {
-    transaction: vi.fn(async (cb: (manager: unknown) => unknown) => {
+    transaction: vi.fn((cb: (manager: unknown) => unknown) => {
       const manager = {
         getRepository: vi.fn((entity: { name: string }) =>
           entity.name === 'User' ? userRepo : doctorRepo,
@@ -42,7 +46,13 @@ function buildService() {
     passwordService as never,
   );
 
-  return { service, dataSource, doctorsRepository, usersRepository, passwordService };
+  return {
+    service,
+    dataSource,
+    doctorsRepository,
+    usersRepository,
+    passwordService,
+  };
 }
 
 describe('DoctorsService.create (RF03/RN03 - atomicidade)', () => {
@@ -163,14 +173,24 @@ describe('DoctorsService.create (RF03/RN03 - atomicidade)', () => {
 
   it('lista medicos paginados filtrando por nome', async () => {
     ctx.doctorsRepository.listPaginated.mockResolvedValue([
-      [{ id: 1, crm: 'CRM1', user: { id: 1, name: 'Ana', email: 'a@x.com', roles: ['doctor'] } }],
+      [
+        {
+          id: 1,
+          crm: 'CRM1',
+          user: { id: 1, name: 'Ana', email: 'a@x.com', roles: ['doctor'] },
+        },
+      ],
       1,
     ]);
 
     const result = await ctx.service.list(1, 20, 'Ana');
 
     expect(result.meta.total).toBe(1);
-    expect(ctx.doctorsRepository.listPaginated).toHaveBeenCalledWith(1, 20, 'Ana');
+    expect(ctx.doctorsRepository.listPaginated).toHaveBeenCalledWith(
+      1,
+      20,
+      'Ana',
+    );
   });
 
   it('devolve o medico pelo id (findById)', async () => {

@@ -38,7 +38,12 @@ export class PatientsService {
       pageSize,
       name,
     );
-    return paginate(patients.map((p) => this.toResponseDto(p)), total, page, pageSize);
+    return paginate(
+      patients.map((p) => this.toResponseDto(p)),
+      total,
+      page,
+      pageSize,
+    );
   }
 
   async findById(id: number): Promise<PatientResponseDto> {

@@ -1,4 +1,11 @@
-import { ArrayMinSize, IsArray, IsEmail, IsIn, IsString, MinLength } from 'class-validator';
+import {
+  ArrayMinSize,
+  IsArray,
+  IsEmail,
+  IsIn,
+  IsString,
+  MinLength,
+} from 'class-validator';
 import { ROLE_NAMES, RoleName } from '../entities/user.entity';
 
 export class RegisterUserDto {

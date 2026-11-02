@@ -34,10 +34,16 @@ export class MedicalRecordsService {
 
     const doctor = await this.doctorsService.findByUserId(user.id);
     if (!doctor) {
-      throw new AppError('ACESSO_NEGADO', 'Usuario autenticado nao e um medico.');
+      throw new AppError(
+        'ACESSO_NEGADO',
+        'Usuario autenticado nao e um medico.',
+      );
     }
 
-    const hasLink = await this.appointmentsRepository.hasLink(doctor.id, dto.patientId);
+    const hasLink = await this.appointmentsRepository.hasLink(
+      doctor.id,
+      dto.patientId,
+    );
     if (!hasLink) {
       throw new AppError(
         'ACESSO_NEGADO',
@@ -85,7 +91,12 @@ export class MedicalRecordsService {
       page,
       pageSize,
     );
-    return paginate(records.map((r) => this.toResponseDto(r)), total, page, pageSize);
+    return paginate(
+      records.map((r) => this.toResponseDto(r)),
+      total,
+      page,
+      pageSize,
+    );
   }
 
   private toResponseDto(record: MedicalRecord): MedicalRecordResponseDto {

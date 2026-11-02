@@ -21,7 +21,10 @@ export class UsersService {
   async register(dto: RegisterUserDto): Promise<UserResponseDto> {
     const existing = await this.usersRepository.findByEmail(dto.email);
     if (existing) {
-      throw new AppError('EMAIL_JA_CADASTRADO', 'Este e-mail ja esta cadastrado.');
+      throw new AppError(
+        'EMAIL_JA_CADASTRADO',
+        'Este e-mail ja esta cadastrado.',
+      );
     }
 
     const user = this.usersRepository.create({

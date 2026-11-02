@@ -1,7 +1,10 @@
 import { IsIn, IsInt, IsISO8601, IsOptional, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PaginationQueryDto } from '../../common/pagination/pagination-query.dto';
-import { APPOINTMENT_STATUSES, AppointmentStatus } from '../entities/appointment.entity';
+import {
+  APPOINTMENT_STATUSES,
+  AppointmentStatus,
+} from '../entities/appointment.entity';
 
 /**
  * GET /appointments - filtros opcionais. doctorId e forcado/ignorado pelo

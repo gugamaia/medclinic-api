@@ -2,7 +2,6 @@ import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
 import { buildDataSourceOptions } from './data-source-options';
-import { APIEnv } from '../../env';
 
 /**
  * Unico lugar que conecta ao PostgreSQL. O DataSource e exportado como
@@ -14,7 +13,7 @@ import { APIEnv } from '../../env';
   providers: [
     {
       provide: DataSource,
-      async useFactory(configService: ConfigService<APIEnv>) {
+      async useFactory() {
         // Garante que as variaveis de ambiente ja validadas pelo
         // ConfigModule tambem fiquem em process.env, para o
         // buildDataSourceOptions (compartilhado com o CLI) funcionar

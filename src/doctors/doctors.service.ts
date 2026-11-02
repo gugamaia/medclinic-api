@@ -42,7 +42,10 @@ export class DoctorsService {
     ]);
 
     if (existingUser) {
-      throw new AppError('EMAIL_JA_CADASTRADO', 'Este e-mail ja esta cadastrado.');
+      throw new AppError(
+        'EMAIL_JA_CADASTRADO',
+        'Este e-mail ja esta cadastrado.',
+      );
     }
     if (existingDoctor) {
       throw new AppError('CRM_JA_CADASTRADO', 'Este CRM ja esta cadastrado.');
@@ -118,10 +121,16 @@ export class DoctorsService {
     const dbError = error as { code?: string; detail?: string };
     if (dbError.code === POSTGRES_UNIQUE_VIOLATION) {
       if (dbError.detail?.includes('email')) {
-        return new AppError('EMAIL_JA_CADASTRADO', 'Este e-mail ja esta cadastrado.');
+        return new AppError(
+          'EMAIL_JA_CADASTRADO',
+          'Este e-mail ja esta cadastrado.',
+        );
       }
       if (dbError.detail?.includes('crm')) {
-        return new AppError('CRM_JA_CADASTRADO', 'Este CRM ja esta cadastrado.');
+        return new AppError(
+          'CRM_JA_CADASTRADO',
+          'Este CRM ja esta cadastrado.',
+        );
       }
     }
     throw error;

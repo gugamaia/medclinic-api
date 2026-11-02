@@ -7,7 +7,12 @@ function buildService() {
   };
   const workScheduleRepository = {
     findByDoctorId: vi.fn().mockResolvedValue([
-      { weekDay: 1, startTime: '08:00', endTime: '12:00', slotDurationMinutes: 30 },
+      {
+        weekDay: 1,
+        startTime: '08:00',
+        endTime: '12:00',
+        slotDurationMinutes: 30,
+      },
     ]),
   };
   const appointmentsRepository = {
@@ -20,7 +25,12 @@ function buildService() {
     appointmentsRepository as never,
   );
 
-  return { service, doctorsService, workScheduleRepository, appointmentsRepository };
+  return {
+    service,
+    doctorsService,
+    workScheduleRepository,
+    appointmentsRepository,
+  };
 }
 
 describe('CalendarService.getCalendar (RF05/4.9.6)', () => {
@@ -32,13 +42,21 @@ describe('CalendarService.getCalendar (RF05/4.9.6)', () => {
 
   it('rejeita quando "from" e posterior a "to"', async () => {
     await expect(
-      ctx.service.getCalendar(1, '2026-03-10T00:00:00.000Z', '2026-03-05T00:00:00.000Z'),
+      ctx.service.getCalendar(
+        1,
+        '2026-03-10T00:00:00.000Z',
+        '2026-03-05T00:00:00.000Z',
+      ),
     ).rejects.toMatchObject({ code: 'DADOS_INVALIDOS' });
   });
 
   it('rejeita quando o intervalo ultrapassa 31 dias', async () => {
     await expect(
-      ctx.service.getCalendar(1, '2026-01-01T00:00:00.000Z', '2026-03-01T00:00:00.000Z'),
+      ctx.service.getCalendar(
+        1,
+        '2026-01-01T00:00:00.000Z',
+        '2026-03-01T00:00:00.000Z',
+      ),
     ).rejects.toMatchObject({ code: 'DADOS_INVALIDOS' });
   });
 

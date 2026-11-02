@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { findShiftConflict, WorkScheduleService } from '../../src/work-schedule/work-schedule.service';
+import {
+  findShiftConflict,
+  WorkScheduleService,
+} from '../../src/work-schedule/work-schedule.service';
 import { ShiftDto } from '../../src/work-schedule/dto/shift.dto';
 
 function shift(weekDay: number, startTime: string, endTime: string): ShiftDto {
@@ -59,7 +62,7 @@ describe('WorkScheduleService.replace (RF04/RN15)', () => {
       delete: vi.fn(),
     };
     const dataSource = {
-      transaction: vi.fn(async (cb: (manager: unknown) => unknown) => {
+      transaction: vi.fn((cb: (manager: unknown) => unknown) => {
         const manager = { getRepository: vi.fn(() => repo) };
         return cb(manager);
       }),
@@ -77,7 +80,13 @@ describe('WorkScheduleService.replace (RF04/RN15)', () => {
       doctorsService as never,
     );
 
-    return { service, dataSource, repo, workScheduleRepository, doctorsService };
+    return {
+      service,
+      dataSource,
+      repo,
+      workScheduleRepository,
+      doctorsService,
+    };
   }
 
   let ctx: ReturnType<typeof buildService>;

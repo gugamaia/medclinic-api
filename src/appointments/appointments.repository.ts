@@ -11,7 +11,11 @@ export interface AppointmentFilter {
 }
 
 /** Status que ainda "ocupam" a agenda ao checar conflito (RN09). */
-const ACTIVE_STATUSES: AppointmentStatus[] = ['scheduled', 'in_progress', 'done'];
+const ACTIVE_STATUSES: AppointmentStatus[] = [
+  'scheduled',
+  'in_progress',
+  'done',
+];
 
 @Injectable()
 export class AppointmentsRepository extends Repository<Appointment> {
@@ -32,18 +36,28 @@ export class AppointmentsRepository extends Repository<Appointment> {
     excludeId?: number;
   }): Promise<Appointment[]> {
     const qb = this.createQueryBuilder('appointment')
-      .where('appointment.status IN (:...statuses)', { statuses: ACTIVE_STATUSES })
+      .where('appointment.status IN (:...statuses)', {
+        statuses: ACTIVE_STATUSES,
+      })
       .andWhere('appointment.starts_at < :endsAt', { endsAt: params.endsAt })
-      .andWhere('appointment.ends_at > :startsAt', { startsAt: params.startsAt });
+      .andWhere('appointment.ends_at > :startsAt', {
+        startsAt: params.startsAt,
+      });
 
     if (params.doctorId !== undefined) {
-      qb.andWhere('appointment.doctor_id = :doctorId', { doctorId: params.doctorId });
+      qb.andWhere('appointment.doctor_id = :doctorId', {
+        doctorId: params.doctorId,
+      });
     }
     if (params.patientId !== undefined) {
-      qb.andWhere('appointment.patient_id = :patientId', { patientId: params.patientId });
+      qb.andWhere('appointment.patient_id = :patientId', {
+        patientId: params.patientId,
+      });
     }
     if (params.excludeId !== undefined) {
-      qb.andWhere('appointment.id != :excludeId', { excludeId: params.excludeId });
+      qb.andWhere('appointment.id != :excludeId', {
+        excludeId: params.excludeId,
+      });
     }
 
     return qb.getMany();
@@ -56,7 +70,9 @@ export class AppointmentsRepository extends Repository<Appointment> {
   ): Promise<Appointment[]> {
     return this.createQueryBuilder('appointment')
       .where('appointment.doctor_id = :doctorId', { doctorId })
-      .andWhere('appointment.status IN (:...statuses)', { statuses: ACTIVE_STATUSES })
+      .andWhere('appointment.status IN (:...statuses)', {
+        statuses: ACTIVE_STATUSES,
+      })
       .andWhere('appointment.starts_at < :to', { to })
       .andWhere('appointment.ends_at > :from', { from })
       .orderBy('appointment.starts_at', 'ASC')
@@ -74,10 +90,14 @@ export class AppointmentsRepository extends Repository<Appointment> {
       .take(pageSize);
 
     if (filter.doctorId !== undefined) {
-      qb.andWhere('appointment.doctor_id = :doctorId', { doctorId: filter.doctorId });
+      qb.andWhere('appointment.doctor_id = :doctorId', {
+        doctorId: filter.doctorId,
+      });
     }
     if (filter.patientId !== undefined) {
-      qb.andWhere('appointment.patient_id = :patientId', { patientId: filter.patientId });
+      qb.andWhere('appointment.patient_id = :patientId', {
+        patientId: filter.patientId,
+      });
     }
     if (filter.status) {
       qb.andWhere('appointment.status = :status', { status: filter.status });

@@ -5,7 +5,9 @@ function buildService() {
   const patientsRepository = {
     findByCpf: vi.fn(),
     create: vi.fn((data: unknown) => data),
-    save: vi.fn((data: unknown) => Promise.resolve({ id: 1, createdAt: new Date(), ...(data as object) })),
+    save: vi.fn((data: unknown) =>
+      Promise.resolve({ id: 1, createdAt: new Date(), ...(data as object) }),
+    ),
     listPaginated: vi.fn(),
     findOneBy: vi.fn(),
     softDelete: vi.fn(),
@@ -23,7 +25,10 @@ describe('PatientsService (RF02/RN02)', () => {
   });
 
   it('rejeita cadastro com CPF ja existente', async () => {
-    ctx.patientsRepository.findByCpf.mockResolvedValue({ id: 5, cpf: '12345678901' });
+    ctx.patientsRepository.findByCpf.mockResolvedValue({
+      id: 5,
+      cpf: '12345678901',
+    });
 
     await expect(
       ctx.service.create({ name: 'Joao', cpf: '12345678901' }),
@@ -33,7 +38,10 @@ describe('PatientsService (RF02/RN02)', () => {
   it('cria o paciente com sucesso quando o CPF e inedito', async () => {
     ctx.patientsRepository.findByCpf.mockResolvedValue(null);
 
-    const result = await ctx.service.create({ name: 'Joao', cpf: '12345678901' });
+    const result = await ctx.service.create({
+      name: 'Joao',
+      cpf: '12345678901',
+    });
     expect(result.name).toBe('Joao');
     expect(result.cpf).toBe('12345678901');
   });
@@ -69,10 +77,18 @@ describe('PatientsService (RF02/RN02)', () => {
     ctx.patientsRepository.listPaginated.mockResolvedValue([[], 0]);
 
     await ctx.service.list(1, 20);
-    expect(ctx.patientsRepository.listPaginated).toHaveBeenCalledWith(1, 20, undefined);
+    expect(ctx.patientsRepository.listPaginated).toHaveBeenCalledWith(
+      1,
+      20,
+      undefined,
+    );
 
     await ctx.service.list(1, 20, 'Ana');
-    expect(ctx.patientsRepository.listPaginated).toHaveBeenCalledWith(1, 20, 'Ana');
+    expect(ctx.patientsRepository.listPaginated).toHaveBeenCalledWith(
+      1,
+      20,
+      'Ana',
+    );
   });
 
   it('update sem "name" preserva o nome atual sem chamar nada extra', async () => {

@@ -7,7 +7,9 @@ function buildService() {
     findByEmail: vi.fn(),
     findForAuthentication: vi.fn(),
     create: vi.fn((data: unknown) => data),
-    save: vi.fn((data: unknown) => Promise.resolve({ id: 1, ...(data as object) })),
+    save: vi.fn((data: unknown) =>
+      Promise.resolve({ id: 1, ...(data as object) }),
+    ),
     findOneBy: vi.fn(),
   };
   const passwordService = {
@@ -20,7 +22,7 @@ function buildService() {
 
   const service = new UsersService(
     usersRepository as never,
-    passwordService as never,
+    passwordService,
     jwtService as never,
   );
 
@@ -39,7 +41,9 @@ describe('UsersService.login (RF01/RF11)', () => {
 
     await expect(
       ctx.service.login({ email: 'ninguem@x.com', password: '123456' }),
-    ).rejects.toMatchObject({ code: 'CREDENCIAIS_INVALIDAS' } satisfies Partial<AppError>);
+    ).rejects.toMatchObject({
+      code: 'CREDENCIAIS_INVALIDAS',
+    } satisfies Partial<AppError>);
   });
 
   it('rejeita login com senha incorreta usando a MESMA mensagem de e-mail invalido', async () => {
@@ -75,7 +79,10 @@ describe('UsersService.login (RF01/RF11)', () => {
     });
 
     expect(result).toEqual({ accessToken: 'signed-token' });
-    expect(ctx.jwtService.sign).toHaveBeenCalledWith({ sub: 42, roles: ['doctor'] });
+    expect(ctx.jwtService.sign).toHaveBeenCalledWith({
+      sub: 42,
+      roles: ['doctor'],
+    });
   });
 });
 
@@ -111,7 +118,9 @@ describe('UsersService.register (RF13)', () => {
     });
 
     expect(result.email).toBe('fulano@x.com');
-    expect((result as unknown as { password?: string }).password).toBeUndefined();
+    expect(
+      (result as unknown as { password?: string }).password,
+    ).toBeUndefined();
     expect(ctx.usersRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({ password: 'senha-hasheada' }),
     );

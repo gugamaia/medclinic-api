@@ -17,11 +17,13 @@ const DOCTOR_SHIFT = {
 
 function buildService() {
   const dataSource = {
-    transaction: vi.fn(async (cb: (manager: unknown) => unknown) => {
+    transaction: vi.fn((cb: (manager: unknown) => unknown) => {
       const appointmentRepo = {
         createQueryBuilder: vi.fn(() => queryBuilderStub),
         create: vi.fn((data: unknown) => data),
-        save: vi.fn((data: unknown) => Promise.resolve({ id: 1, ...(data as object) })),
+        save: vi.fn((data: unknown) =>
+          Promise.resolve({ id: 1, ...(data as object) }),
+        ),
       };
       const manager = {
         createQueryBuilder: vi.fn(() => ({
@@ -88,7 +90,11 @@ describe('AppointmentsService.create (RF06/RF07/RN07-RN10)', () => {
     );
 
     await expect(
-      ctx.service.create({ doctorId: 999, patientId: 1, startsAt: MONDAY_09_00 }),
+      ctx.service.create({
+        doctorId: 999,
+        patientId: 1,
+        startsAt: MONDAY_09_00,
+      }),
     ).rejects.toMatchObject({ code: 'RECURSO_NAO_ENCONTRADO' });
   });
 
@@ -98,7 +104,11 @@ describe('AppointmentsService.create (RF06/RF07/RN07-RN10)', () => {
     );
 
     await expect(
-      ctx.service.create({ doctorId: 1, patientId: 999, startsAt: MONDAY_09_00 }),
+      ctx.service.create({
+        doctorId: 1,
+        patientId: 999,
+        startsAt: MONDAY_09_00,
+      }),
     ).rejects.toMatchObject({ code: 'RECURSO_NAO_ENCONTRADO' });
   });
 
@@ -124,7 +134,12 @@ describe('AppointmentsService.create (RF06/RF07/RN07-RN10)', () => {
 
   it('rejeita quando o slot ultrapassa o fim do turno', async () => {
     ctx.workScheduleRepository.findByDoctorId.mockResolvedValue([
-      { weekDay: 1, startTime: '08:00', endTime: '09:15', slotDurationMinutes: 30 },
+      {
+        weekDay: 1,
+        startTime: '08:00',
+        endTime: '09:15',
+        slotDurationMinutes: 30,
+      },
     ]);
 
     await expect(
