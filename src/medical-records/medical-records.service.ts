@@ -27,10 +27,11 @@ export class MedicalRecordsService {
    * esse medico e esse paciente antes de permitir a escrita.
    */
   async create(
+    patientId: number,
     dto: CreateMedicalRecordDto,
     user: AuthUser,
   ): Promise<MedicalRecordResponseDto> {
-    await this.patientsService.getOrFail(dto.patientId);
+    await this.patientsService.getOrFail(patientId);
 
     const doctor = await this.doctorsService.findByUserId(user.id);
     if (!doctor) {
@@ -42,7 +43,7 @@ export class MedicalRecordsService {
 
     const hasLink = await this.appointmentsRepository.hasLink(
       doctor.id,
-      dto.patientId,
+      patientId,
     );
     if (!hasLink) {
       throw new AppError(
@@ -52,7 +53,7 @@ export class MedicalRecordsService {
     }
 
     const record = this.medicalRecordsRepository.create({
-      patientId: dto.patientId,
+      patientId: patientId,
       doctorId: doctor.id,
       text: dto.text,
     });
@@ -61,9 +62,8 @@ export class MedicalRecordsService {
   }
 
   /**
-   * RF09/RN14 - leitura tambem exige vinculo quando quem pede e um
-   * medico; admin e secretary podem consultar livremente (necessario
-   * para gestao administrativa do historico do paciente).
+   * RF09/RN14 - leitura exige vinculo quando quem pede e um medico; o
+   * admin le para auditoria. A secretaria nunca chega aqui (@Roles).
    */
   async listByPatient(
     patientId: number,

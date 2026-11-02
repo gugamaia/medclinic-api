@@ -48,7 +48,8 @@ describe('MedicalRecordsService.create (RF09/RN14)', () => {
 
     await expect(
       ctx.service.create(
-        { patientId: 1, text: 'Paciente relata dor de cabeca.' },
+        1,
+        { text: 'Paciente relata dor de cabeca.' },
         { id: 10, roles: ['doctor'] },
       ),
     ).rejects.toMatchObject({ code: 'ACESSO_NEGADO' });
@@ -59,7 +60,8 @@ describe('MedicalRecordsService.create (RF09/RN14)', () => {
     ctx.appointmentsRepository.hasLink.mockResolvedValue(true);
 
     const result = await ctx.service.create(
-      { patientId: 1, text: 'Paciente relata dor de cabeca.' },
+      1,
+      { text: 'Paciente relata dor de cabeca.' },
       { id: 10, roles: ['doctor'] },
     );
 
@@ -73,7 +75,8 @@ describe('MedicalRecordsService.create (RF09/RN14)', () => {
     ctx.appointmentsRepository.hasLink.mockResolvedValue(true);
 
     await ctx.service.create(
-      { patientId: 1, text: 'texto' },
+      1,
+      { text: 'texto' },
       { id: 10, roles: ['doctor'] },
     );
 

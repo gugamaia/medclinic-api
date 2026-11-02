@@ -18,13 +18,19 @@ import { AuthUser } from '../auth/dto/jwt-payload';
 export class MedicalRecordsController {
   constructor(private readonly medicalRecordsService: MedicalRecordsService) {}
 
+  /** Secao 4.9.8 - so medico com vinculo escreve; doctorId vem do token. */
   @Roles('doctor')
-  @Post('medical-records')
-  create(@Body() dto: CreateMedicalRecordDto, @CurrentUser() user: AuthUser) {
-    return this.medicalRecordsService.create(dto, user);
+  @Post('patients/:patientId/medical-records')
+  create(
+    @Param('patientId', ParseIntPipe) patientId: number,
+    @Body() dto: CreateMedicalRecordDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.medicalRecordsService.create(patientId, dto, user);
   }
 
-  @Roles('admin', 'secretary', 'doctor')
+  /** Leitura: medico com vinculo ou admin (auditoria). Secretaria nao le. */
+  @Roles('admin', 'doctor')
   @Get('patients/:patientId/medical-records')
   listByPatient(
     @Param('patientId', ParseIntPipe) patientId: number,

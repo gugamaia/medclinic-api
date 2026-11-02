@@ -1,10 +1,7 @@
-import { IsInt, IsNotEmpty, IsString, Min } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
+/** O patientId vem da rota e o doctorId do token; nunca do corpo. */
 export class CreateMedicalRecordDto {
-  @IsInt()
-  @Min(1)
-  patientId: number;
-
   @IsString()
   @IsNotEmpty()
   text: string;
