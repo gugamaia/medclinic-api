@@ -349,3 +349,5 @@ Prefixo fixo: `/api/v1`. Perfis entre colchetes indicam `@Roles(...)`; sem colch
 ## URL pública
 
 `TODO` — preencher com a URL do deploy antes da entrega final.
+
+//the end
