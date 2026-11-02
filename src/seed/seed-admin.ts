@@ -31,11 +31,11 @@ async function seedAdmin() {
 
   const hashed = await bcrypt.hash(password, await bcrypt.genSalt());
   const admin = userRepo.create({
-    name,
-    email,
-    password: hashed,
-    roles: ['admin'],
-  });
+  name,
+  email,
+  password: hashed,
+  role: UserRole.ADMIN, // ou 'admin' em vez de roles: ['admin']
+});
   await userRepo.save(admin);
 
   console.log(`Usuario admin "${email}" criado com sucesso.`);
