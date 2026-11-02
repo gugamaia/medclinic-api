@@ -1,10 +1,42 @@
+# Controle de versao e CI
+.git
+.github
+
+# Dependencias e saidas (a imagem instala e compila por conta propria)
 node_modules
 dist
 coverage
+/.nyc_output
+
+# Testes e documentacao nao entram na imagem
 test
-.git
-.github
 *.md
+
+# Segredos: nunca vao para dentro da imagem
 .env
 .env.*
 !.env.example
+
+# Logs e arquivos temporarios
+*.log
+.temp
+.tmp
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Sistema operacional e editores
+.DS_Store
+.directory
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.vscode/*
+
+# Overrides locais por maquina
+*.local.*
