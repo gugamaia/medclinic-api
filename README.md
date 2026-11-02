@@ -1,6 +1,6 @@
 # MedClinic API — Etapa 2 (NestJS)
 
-![Node.js](https://img.shields.io/badge/Node.js-20-339933?logo=node.js&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white)
 ![NestJS](https://img.shields.io/badge/NestJS-11-E0234E?logo=nestjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5_strict-3178C6?logo=typescript&logoColor=white)
 ![TypeORM](https://img.shields.io/badge/TypeORM-0.3-FE0803)
@@ -58,7 +58,7 @@ API REST para gestão de uma clínica médica: cadastro de pacientes e médicos,
 
 ## Stack técnica
 
-- **Node.js 20** + **TypeScript 5** (modo `strict`)
+- **Node.js 22** + **TypeScript 5** (modo `strict`)
 - **NestJS 11** (módulos, guards, pipes, filtros, injeção de dependência)
 - **TypeORM 0.3** + **PostgreSQL** (migrations manuais, sem `synchronize`)
 - **class-validator** / **class-transformer** — validação de DTOs
@@ -120,16 +120,16 @@ Qualquer erro em qualquer etapa → AllExceptionsFilter → envelope JSON padron
 **Simplificações conscientes** (documentadas em comentário no próprio código, caso a avaliação queira a razão):
 - perfis (`roles`) são uma coluna `text[]` no usuário, em vez de uma tabela de papéis à parte — não há necessidade de papéis dinâmicos no escopo do projeto;
 - o JWT carrega um payload assinado simples (`sub`, `roles`), sem uma camada extra de criptografia do payload — o conteúdo não é sensível e HTTPS já protege o transporte;
-- horários de turno (`work_shift.start_time`/`end_time`) são strings `"HH:MM"`, não o tipo `time` do Postgres — mais simples de comparar e testar em unidade, sem pegadinha de fuso horário;
+- horários de turno (`work_shift.start_time`/`end_time`) são strings `"HH:MM"`, não o tipo `time` do Postgres — mais simples de comparar e testar em unidade, sem pegadinha de fuso horário. Eles são **hora local da clínica** (`America/Sao_Paulo`, RN06): o `startsAt` (UTC) é convertido para esse relógio em `src/common/clinic-time.ts` antes de comparar com a escala, e `from`/`to` do calendário e da listagem cobrem o dia inteiro local;
 - IDs são inteiros autoincrementais, não UUID — compatível com os exemplos de payload do contrato da API.
 
 ## Como rodar localmente
 
-Pré-requisitos: Node.js 20+, Docker (para o Postgres local).
+Pré-requisitos: Node.js 22+, Docker (para o Postgres local).
 
 ```bash
 # 1. instalar dependências
-npm install --legacy-peer-deps
+npm ci
 
 # 2. copiar e preencher o .env
 cp .env.example .env
@@ -152,7 +152,7 @@ npm run start:dev
 
 A API sobe em `http://localhost:3000/api/v1` (prefixo fixo — ver `src/main.ts`).
 
-> `npm install` usa `--legacy-peer-deps`: o `@nestjs/schematics` mais recente da sua máquina pode exigir TypeScript 6, enquanto o projeto é construído sobre a linha estável 11.x do Nest (compatível com TypeScript 5). Isso evita um conflito de resolução do npm sem baixar uma versão experimental do framework.
+> O arquivo `.npmrc` do repositório ativa `legacy-peer-deps` (por isso `npm ci` funciona no CI e no Docker sem flags): o `@nestjs/schematics` mais recente da sua máquina pode exigir TypeScript 6, enquanto o projeto é construído sobre a linha estável 11.x do Nest (compatível com TypeScript 5). Isso evita um conflito de resolução do npm sem baixar uma versão experimental do framework.
 
 ## Variáveis de ambiente
 
@@ -205,7 +205,7 @@ Cenários mínimos exigidos pela Seção 4.5 do enunciado, e onde cada um está:
 | Acesso a prontuário (com/sem vínculo) | `test/medical-records/medical-records.service.spec.ts` |
 | Login (credencial inválida + comparação de hash) | `test/users/users.service.spec.ts` |
 
-A suíte cobre também `patients`, `doctors` (incluindo a transação atômica e a tradução de violação de unique), `calendar` e os dois serviços de `auth` (`jwt.service.ts`, `password.service.ts`), totalizando 64 testes.
+A suíte cobre também `patients`, `doctors` (incluindo a transação atômica e a tradução de violação de unique), `calendar` e os dois serviços de `auth` (`jwt.service.ts`, `password.service.ts`), totalizando 78 testes.
 
 ## Qualidade de código
 
@@ -247,8 +247,8 @@ Os nomes dos containers vêm de `CONTAINER_NAME_DB` e `CONTAINER_NAME_API` no `.
 
 ## CI/CD
 
-- **`.github/workflows/pr-workflow.yml`** — roda em toda PR para `main`: instala dependências, roda o lint (`npm run lint:check`), builda e roda `npm run test:cov` (o merge é bloqueado se a cobertura cair abaixo do limite).
-- **`.github/workflows/deploy.yml`** — roda em todo push para `main` (ou seja, após o merge de uma PR): builda a imagem Docker e publica no GitHub Container Registry (`ghcr.io/<owner>/<repo>`); o passo de disparo do deploy no provedor de hospedagem está marcado como `TODO` — preencher com o webhook/comando real do provedor escolhido antes da entrega final.
+- **`.github/workflows/pr-workflow.yml`** — roda em toda PR para `main` (job `build-and-test`, Node 22): `npm ci`, roda o lint (`npm run lint:check`), builda e roda `npm run test:cov` (o merge é bloqueado se a cobertura cair abaixo do limite).
+- **`.github/workflows/deploy.yml`** — roda em todo push para `main` (ou seja, após o merge de uma PR): builda a imagem Docker e publica no GitHub Container Registry (`ghcr.io/<owner>/<repo>`); o último passo chama o Deploy Hook do Render (`curl` na URL guardada no secret `RENDER_DEPLOY_HOOK_URL`). Nenhuma variável da aplicação fica no workflow: ficam no painel da plataforma.
 
 ## Perfis de acesso
 
@@ -256,8 +256,8 @@ O usuário carrega um array `roles` no token. Cada rota declara com `@Roles(...)
 
 | Perfil | O que pode fazer |
 |---|---|
-| `admin` | Cria usuários e médicos, define a escala, cadastra, edita e remove pacientes, cria agendamentos e cancela qualquer consulta. Lê o prontuário de qualquer paciente, mas não escreve |
-| `secretary` | Cadastra e edita pacientes, cria agendamentos e cancela qualquer consulta. Lê o histórico de prontuário |
+| `admin` | Cria usuários e médicos, define a escala, cadastra, edita e remove pacientes, cria agendamentos e cancela qualquer consulta. Inicia e conclui consultas e lê o prontuário de qualquer paciente (auditoria), mas não escreve |
+| `secretary` | Cadastra e edita pacientes, cria agendamentos e cancela consultas **agendadas** (não as em andamento). Não acessa prontuário |
 | `doctor` | Inicia, conclui e cancela as próprias consultas e só enxerga as próprias. Escreve e lê o prontuário apenas de pacientes com quem tem vínculo |
 
 **Vínculo (RN14):** um médico tem vínculo com um paciente quando existe ao menos uma consulta entre os dois com status `in_progress` ou `done`. Sem vínculo, escrita e leitura de prontuário devolvem `ACESSO_NEGADO`.
@@ -314,8 +314,8 @@ O usuário carrega um array `roles` no token. Cada rota declara com `@Roles(...)
 // PATCH /appointments/1/status
 { "status": "in_progress" }
 
-// POST /medical-records
-{ "patientId": 1, "text": "Paciente relata melhora dos sintomas." }
+// POST /patients/1/medical-records  (doctorId vem do token)
+{ "text": "Paciente relata melhora dos sintomas." }
 ```
 
 ## Endpoints
@@ -338,13 +338,13 @@ Prefixo fixo: `/api/v1`. Perfis entre colchetes indicam `@Roles(...)`; sem colch
 | GET | `/doctors/:id` | — | Detalhe do médico |
 | PUT | `/doctors/:doctorId/work-schedule` | `admin` | Substitui a escala inteira do médico |
 | GET | `/doctors/:doctorId/work-schedule` | — | Consulta a escala do médico |
-| GET | `/doctors/:doctorId/calendar?from=&to=` | — | Escala + agendamentos no período (máx. 31 dias) |
+| GET | `/doctors/:doctorId/calendar?from=&to=` | — | `{ workSchedule: { shifts }, appointments }` no período `YYYY-MM-DD` inclusivo (máx. 31 dias) |
 | POST | `/appointments` | `admin`, `secretary` | Cria agendamento |
 | GET | `/appointments` | — | Lista agendamentos (médico só vê os próprios) |
 | GET | `/appointments/:id` | — | Detalhe (médico só acessa os próprios) |
 | PATCH | `/appointments/:id/status` | — | Transição de status (autoridade validada por regra) |
-| POST | `/medical-records` | `doctor` | Cria entrada de prontuário (exige vínculo) |
-| GET | `/patients/:patientId/medical-records` | `admin`, `secretary`, `doctor` | Histórico do paciente (médico exige vínculo) |
+| POST | `/patients/:patientId/medical-records` | `doctor` | Cria entrada de prontuário (exige vínculo; `doctorId` vem do token) |
+| GET | `/patients/:patientId/medical-records` | `admin`, `doctor` | Histórico do paciente (médico exige vínculo; admin lê para auditoria) |
 
 ## URL pública
 
