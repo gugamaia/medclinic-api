@@ -1,0 +1,48 @@
+name: Deploy - Build & Push Docker Image
+
+# Roda somente em push direto para main (ou seja, depois que uma PR ja
+# passou pelo pr-workflow.yml e foi mergeada). Builda a imagem Docker e
+# publica no GitHub Container Registry (GHCR); o passo final de
+# "trigger deploy" e um placeholder para o gatilho real da hospedagem
+# escolhida (Render, Railway, Fly.io, etc).
+on:
+  push:
+    branches: [main]
+
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login no GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build e push da imagem
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      # Render: o Deploy Hook (secret RENDER_DEPLOY_HOOK_URL) manda o Render
+      # puxar a imagem recem-publicada. Nenhuma variavel da aplicacao
+      # (JWT_SECRET, DB_*, senha do admin) fica aqui: elas vivem no painel
+      # da plataforma.
+      - name: Disparar deploy no Render
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: curl --fail --silent --show-error -X POST "$RENDER_DEPLOY_HOOK_URL"

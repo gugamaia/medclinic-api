@@ -1,13 +1,13 @@
-version: '3.9'
+name: medclinic-api-db
 
-# Sobe um Postgres local para desenvolvimento. A API em si roda fora do
-# compose (npm run start:dev), apontando DB_HOST=localhost para este
+# Sobe um Postgres local para desenvolvimento. A API roda fora do compose
+# (npm run start:dev), apontando DB_HOST=localhost para este
 # container - mais rapido para iterar do que reconstruir a imagem a
 # cada mudanca de codigo.
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: medclinic-postgres
+    container_name: ${CONTAINER_NAME_DB:-medclinic-postgres}
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USER:-postgres}

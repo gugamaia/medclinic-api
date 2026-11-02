@@ -1,0 +1,23 @@
+name: medclinic-api
+
+# Roda a API em container, construindo a imagem a partir do Dockerfile.
+# O banco continua no docker-compose.yml (um compose por responsabilidade):
+#
+#   docker compose up -d                      # sobe o Postgres
+#   docker compose -f api.compose.yml up -d --build   # sobe a API
+#
+# Dentro do container, "localhost" e o proprio container, entao o host do
+# banco e sobrescrito para alcancar a porta publicada pelo Postgres na
+# maquina. O extra_hosts faz o mesmo nome funcionar no Linux.
+services:
+  api:
+    build: .
+    container_name: ${CONTAINER_NAME_API:-medclinic-api}
+    env_file:
+      - .env
+    environment:
+      DB_HOST: host.docker.internal
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    ports:
+      - '${PORT:-3000}:${PORT:-3000}'
