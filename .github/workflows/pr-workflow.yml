@@ -23,8 +23,11 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
+      - name: Lint (ESLint + Prettier)
+        run: npm run lint:check
+
       - name: Build (nest build)
         run: npm run build
 
-      - name: Testes unitarios
-        run: npm test
+      - name: Testes com cobertura (reprova abaixo de 80%)
+        run: npm run test:cov

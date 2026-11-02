@@ -60,7 +60,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       const body = exception.getResponse();
       const message =
         typeof body === 'object' && body !== null && 'message' in body
-          ? this.flattenMessage((body as { message: unknown }).message)
+          ? this.flattenMessage(body.message)
           : exception.message;
 
       return { statusCode: 400, error: 'DADOS_INVALIDOS', message };
