@@ -1,20 +1,9 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { Request } from 'express';
 import { AuthUser } from '../dto/jwt-payload';
-import { RoleName } from 'src/users/entities/user.entity';
 
 export interface AuthenticatedRequest extends Request {
-  //user?: AuthUser;
-  user?: {
-    id: string;
-    roles: RoleName[];
-  };
-}
-
-export interface AuthUser {
-  id: string;
-  email: string;
-  role: UserRole; // Adiciona esta linha se não existir
+  user?: AuthUser;
 }
 
 /** Injeta o usuario autenticado (id + roles) direto no parametro do controller. */
