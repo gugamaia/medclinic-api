@@ -1,10 +1,4 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  Index,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 /**
  * RF04 - um turno de trabalho de um medico em um dia da semana.
@@ -35,7 +29,4 @@ export class WorkShift {
 
   @Column({ name: 'slot_duration_minutes', type: 'int' })
   slotDurationMinutes: number;
-
-  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
-  createdAt: Date;
 }

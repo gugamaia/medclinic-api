@@ -124,4 +124,11 @@ describe('WorkScheduleService.replace (RF04/RN15)', () => {
     expect(result.doctorId).toBe(1);
     expect(result.shifts).toHaveLength(1);
   });
+
+  it('lista vazia apaga a escala inteira e devolve shifts vazio (RF04)', async () => {
+    const result = await ctx.service.replace(1, []);
+
+    expect(ctx.repo.delete).toHaveBeenCalledWith({ doctorId: 1 });
+    expect(result.shifts).toEqual([]);
+  });
 });
