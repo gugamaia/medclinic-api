@@ -15,15 +15,10 @@ import { UpdateAppointmentStatusDto } from './dto/update-status.dto';
 import { Roles } from '../auth/decorator/roles.decorator';
 import { CurrentUser } from '../auth/decorator/current-user.decorator';
 import { AuthUser } from '../auth/dto/jwt-payload';
-import { AppError } from '../common/errors/app-error';
-import { DoctorsService } from '../doctors/doctors.service';
 
 @Controller('appointments')
 export class AppointmentsController {
-  constructor(
-    private readonly appointmentsService: AppointmentsService,
-    private readonly doctorsService: DoctorsService,
-  ) {}
+  constructor(private readonly appointmentsService: AppointmentsService) {}
 
   @Roles('admin', 'secretary')
   @Post()
@@ -31,57 +26,18 @@ export class AppointmentsController {
     return this.appointmentsService.create(dto);
   }
 
-  /**
-   * RN13 - um usuario com perfil "doctor" so pode ver os PROPRIOS
-   * agendamentos: o doctorId do filtro e forcado a partir do token,
-   * ignorando qualquer doctorId que venha na query string.
-   */
+  /** Filtro forcado por perfil: a regra vive no service (RNF04). */
   @Get()
-  async list(
-    @Query() query: QueryAppointmentsDto,
-    @CurrentUser() user: AuthUser,
-  ) {
-    const filter: {
-      doctorId?: number;
-      patientId?: number;
-      status?: typeof query.status;
-      from?: Date;
-      to?: Date;
-    } = {
-      doctorId: query.doctorId,
-      patientId: query.patientId,
-      status: query.status,
-      from: query.from ? new Date(query.from) : undefined,
-      to: query.to ? new Date(query.to) : undefined,
-    };
-
-    if (user.roles.includes('doctor') && !user.roles.includes('admin')) {
-      const ownDoctor = await this.doctorsService.findByUserId(user.id);
-      filter.doctorId = ownDoctor?.id ?? -1;
-    }
-
-    return this.appointmentsService.list(filter, query.page, query.pageSize);
+  list(@Query() query: QueryAppointmentsDto, @CurrentUser() user: AuthUser) {
+    return this.appointmentsService.list(query, user);
   }
 
-  /** RN13 - medico so pode abrir o detalhe dos proprios agendamentos. */
   @Get(':id')
-  async findOne(
+  findOne(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: AuthUser,
   ) {
-    const appointment = await this.appointmentsService.findById(id);
-
-    if (user.roles.includes('doctor') && !user.roles.includes('admin')) {
-      const ownDoctor = await this.doctorsService.findByUserId(user.id);
-      if (!ownDoctor || ownDoctor.id !== appointment.doctorId) {
-        throw new AppError(
-          'ACESSO_NEGADO',
-          'Voce nao tem acesso a este agendamento.',
-        );
-      }
-    }
-
-    return appointment;
+    return this.appointmentsService.findForUser(id, user);
   }
 
   @Patch(':id/status')

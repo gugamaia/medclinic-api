@@ -3,6 +3,12 @@ import { DataSource } from 'typeorm';
 import { AppError } from '../common/errors/app-error';
 import { paginate, PaginatedResult } from '../common/pagination/paginate';
 import { timeToMinutes } from '../common/time-of-day';
+import {
+  isValidDateOnly,
+  startOfClinicDay,
+  startOfNextClinicDay,
+  toClinicParts,
+} from '../common/clinic-time';
 import { DoctorsService } from '../doctors/doctors.service';
 import { PatientsService } from '../patients/patients.service';
 import { WorkScheduleRepository } from '../work-schedule/work-schedule.repository';
@@ -29,9 +35,11 @@ const ALLOWED_TRANSITIONS: Record<AppointmentStatus, AppointmentStatus[]> = {
 };
 
 /**
- * RN12 - quem tem autoridade para aplicar cada transicao. "admin" e
- * "secretary" podem cancelar qualquer agendamento (reorganizacao de
- * agenda); somente o proprio medico pode iniciar/concluir o atendimento.
+ * RN12 / secao 4.9.7 - autoridade por transicao:
+ *   scheduled   -> in_progress : medico da consulta ou admin
+ *   scheduled   -> cancelled   : admin, secretary ou medico da consulta
+ *   in_progress -> done        : medico da consulta ou admin
+ *   in_progress -> cancelled   : admin ou medico da consulta
  */
 function canApplyTransition(
   user: AuthUser,
@@ -39,17 +47,30 @@ function canApplyTransition(
   to: AppointmentStatus,
   appointmentDoctorUserId: number,
 ): boolean {
+  const isAdmin = user.roles.includes('admin');
+  const isOwnerDoctor =
+    user.roles.includes('doctor') && user.id === appointmentDoctorUserId;
+
   if (to === 'cancelled') {
-    return (
-      user.roles.includes('admin') ||
-      user.roles.includes('secretary') ||
-      (user.roles.includes('doctor') && user.id === appointmentDoctorUserId)
-    );
+    if (from === 'scheduled') {
+      return isAdmin || user.roles.includes('secretary') || isOwnerDoctor;
+    }
+    return isAdmin || isOwnerDoctor;
   }
   if (to === 'in_progress' || to === 'done') {
-    return user.roles.includes('doctor') && user.id === appointmentDoctorUserId;
+    return isAdmin || isOwnerDoctor;
   }
   return false;
+}
+
+export interface AppointmentListQuery {
+  doctorId?: number;
+  patientId?: number;
+  status?: AppointmentStatus;
+  from?: string;
+  to?: string;
+  page: number;
+  pageSize: number;
 }
 
 @Injectable()
@@ -84,12 +105,10 @@ export class AppointmentsService {
     const shifts = await this.workScheduleRepository.findByDoctorId(
       dto.doctorId,
     );
-    // Dia da semana e minutos do dia sao calculados em UTC, de proposito:
-    // startsAt chega como timestamptz (RP05) e a escala (work_shift) nao
-    // guarda fuso horario, entao fixar UTC como referencia unica evita
-    // ambiguidade entre o fuso do servidor e o fuso do cliente.
-    const weekDay = startsAt.getUTCDay();
-    const minutesOfDay = startsAt.getUTCHours() * 60 + startsAt.getUTCMinutes();
+    // RN06: a escala guarda hora de relogio LOCAL da clinica
+    // (America/Sao_Paulo); o instante (timestamptz, RP05) e convertido
+    // para esse relogio antes de comparar com os turnos.
+    const { weekDay, minutesOfDay } = toClinicParts(startsAt);
 
     const shift = shifts.find((s) => {
       if (s.weekDay !== weekDay) return false;
@@ -190,11 +209,39 @@ export class AppointmentsService {
     });
   }
 
+  /**
+   * RF10 - listagem filtrada. `from`/`to` sao datas puras (YYYY-MM-DD),
+   * inclusivas, no dia inteiro do relogio local da clinica. Medico (sem
+   * admin) enxerga so os proprios agendamentos, qualquer que seja o filtro.
+   */
   async list(
-    filter: AppointmentFilter,
-    page: number,
-    pageSize: number,
+    query: AppointmentListQuery,
+    user: AuthUser,
   ): Promise<PaginatedResult<AppointmentResponseDto>> {
+    for (const value of [query.from, query.to]) {
+      if (value !== undefined && !isValidDateOnly(value)) {
+        throw new AppError(
+          'DADOS_INVALIDOS',
+          'Datas devem estar no formato YYYY-MM-DD.',
+        );
+      }
+    }
+
+    const filter: AppointmentFilter = {
+      doctorId: query.doctorId,
+      patientId: query.patientId,
+      status: query.status,
+      from: query.from ? startOfClinicDay(query.from) : undefined,
+      to: query.to ? startOfNextClinicDay(query.to) : undefined,
+    };
+
+    if (user.roles.includes('doctor') && !user.roles.includes('admin')) {
+      const own = await this.doctorsService.findByUserId(user.id);
+      filter.doctorId = own?.id ?? -1;
+    }
+
+    const page = query.page;
+    const pageSize = query.pageSize;
     const [items, total] = await this.appointmentsRepository.listFiltered(
       filter,
       page,
@@ -206,6 +253,24 @@ export class AppointmentsService {
       page,
       pageSize,
     );
+  }
+
+  /** GET /appointments/:id - medico so abre os proprios agendamentos. */
+  async findForUser(
+    id: number,
+    user: AuthUser,
+  ): Promise<AppointmentResponseDto> {
+    const appointment = await this.findById(id);
+    if (user.roles.includes('doctor') && !user.roles.includes('admin')) {
+      const doctor = await this.doctorsService.findByUserId(user.id);
+      if (!doctor || doctor.id !== appointment.doctorId) {
+        throw new AppError(
+          'ACESSO_NEGADO',
+          'Voce nao tem acesso a este agendamento.',
+        );
+      }
+    }
+    return this.toResponseDto(appointment);
   }
 
   async findById(id: number): Promise<Appointment> {

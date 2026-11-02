@@ -6,7 +6,9 @@ export interface AppointmentFilter {
   doctorId?: number;
   patientId?: number;
   status?: AppointmentStatus;
+  /** Limite inclusivo (instante). */
   from?: Date;
+  /** Limite EXCLUSIVO (inicio do dia seguinte ao `to` pedido). */
   to?: Date;
 }
 
@@ -106,7 +108,7 @@ export class AppointmentsRepository extends Repository<Appointment> {
       qb.andWhere('appointment.starts_at >= :from', { from: filter.from });
     }
     if (filter.to) {
-      qb.andWhere('appointment.starts_at <= :to', { to: filter.to });
+      qb.andWhere('appointment.starts_at < :to', { to: filter.to });
     }
 
     return qb.getManyAndCount();

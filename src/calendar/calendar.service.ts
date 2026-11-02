@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { AppError } from '../common/errors/app-error';
+import {
+  daysBetween,
+  isValidDateOnly,
+  startOfClinicDay,
+  startOfNextClinicDay,
+} from '../common/clinic-time';
 import { DoctorsService } from '../doctors/doctors.service';
 import { WorkScheduleRepository } from '../work-schedule/work-schedule.repository';
 import { AppointmentsRepository } from '../appointments/appointments.repository';
@@ -24,26 +30,28 @@ export class CalendarService {
   async getCalendar(doctorId: number, fromRaw: string, toRaw: string) {
     await this.doctorsService.getOrFail(doctorId);
 
-    const from = new Date(fromRaw);
-    const to = new Date(toRaw);
-
-    if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) {
-      throw new AppError('DADOS_INVALIDOS', 'Parametros from/to invalidos.');
-    }
-    if (from > to) {
+    if (!isValidDateOnly(fromRaw) || !isValidDateOnly(toRaw)) {
       throw new AppError(
         'DADOS_INVALIDOS',
-        'O parametro "from" deve ser anterior a "to".',
+        'Parametros from/to devem estar no formato YYYY-MM-DD.',
       );
     }
-
-    const rangeDays = (to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24);
-    if (rangeDays > MAX_RANGE_DAYS) {
+    if (fromRaw > toRaw) {
+      throw new AppError(
+        'DADOS_INVALIDOS',
+        'O parametro "from" deve ser anterior ou igual a "to".',
+      );
+    }
+    if (daysBetween(fromRaw, toRaw) > MAX_RANGE_DAYS) {
       throw new AppError(
         'DADOS_INVALIDOS',
         `O intervalo entre "from" e "to" nao pode ultrapassar ${MAX_RANGE_DAYS} dias.`,
       );
     }
+
+    // Periodo inclusivo nas duas pontas, no dia inteiro do relogio local.
+    const from = startOfClinicDay(fromRaw);
+    const to = startOfNextClinicDay(toRaw);
 
     const [shifts, appointments] = await Promise.all([
       this.workScheduleRepository.findByDoctorId(doctorId),
@@ -51,15 +59,14 @@ export class CalendarService {
     ]);
 
     return {
-      doctorId,
-      from: from.toISOString(),
-      to: to.toISOString(),
-      workSchedule: shifts.map((s) => ({
-        weekDay: s.weekDay,
-        startTime: s.startTime,
-        endTime: s.endTime,
-        slotDurationMinutes: s.slotDurationMinutes,
-      })),
+      workSchedule: {
+        shifts: shifts.map((s) => ({
+          weekDay: s.weekDay,
+          startTime: s.startTime,
+          endTime: s.endTime,
+          slotDurationMinutes: s.slotDurationMinutes,
+        })),
+      },
       appointments: appointments.map((a) => ({
         id: a.id,
         patientId: a.patientId,

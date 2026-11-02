@@ -1,4 +1,4 @@
-import { IsIn, IsInt, IsISO8601, IsOptional, Min } from 'class-validator';
+import { IsIn, IsInt, IsOptional, Matches, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PaginationQueryDto } from '../../common/pagination/pagination-query.dto';
 import {
@@ -30,10 +30,10 @@ export class QueryAppointmentsDto extends PaginationQueryDto {
   status?: AppointmentStatus;
 
   @IsOptional()
-  @IsISO8601()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
   from?: string;
 
   @IsOptional()
-  @IsISO8601()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
   to?: string;
 }
