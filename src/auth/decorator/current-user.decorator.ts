@@ -1,9 +1,14 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { Request } from 'express';
 import { AuthUser } from '../dto/jwt-payload';
+import { RoleName } from 'src/users/entities/user.entity';
 
 export interface AuthenticatedRequest extends Request {
-  user?: AuthUser;
+  //user?: AuthUser;
+  user?: {
+    id: string;
+    roles: RoleName[];
+  };
 }
 
 export interface AuthUser {
