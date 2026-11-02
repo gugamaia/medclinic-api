@@ -43,8 +43,6 @@ jobs:
       # (JWT_SECRET, DB_*, senha do admin) fica aqui: elas vivem no painel
       # da plataforma.
       - name: Disparar deploy no Render
-        # so roda depois que o secret for configurado no repositorio
-        if: env.RENDER_DEPLOY_HOOK_URL != ''
         env:
           RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: curl --fail --silent --show-error -X POST "$RENDER_DEPLOY_HOOK_URL"

@@ -1,7 +1,9 @@
-name: PR - Validacao
+name: PR - Build, Test & Coverage
 
-# Roda em todo pull request contra a main. O nome do job (build-and-test)
-# e estavel porque e ele que vira o check obrigatorio da protecao da branch.
+# Roda em toda pull request contra main: build do projeto, testes
+# unitarios e verificacao do limite minimo de cobertura (RNF07). Esse
+# workflow NAO publica imagem nem faz deploy - isso fica a cargo do
+# deploy.yml, disparado so em push direto para main (apos o merge).
 on:
   pull_request:
     branches: [main]
@@ -29,5 +31,5 @@ jobs:
       - name: Build (nest build)
         run: npm run build
 
-      - name: Testes com cobertura (reprova abaixo de 80%)
+      - name: Rodar testes com cobertura
         run: npm run test:cov
