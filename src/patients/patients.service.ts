@@ -7,6 +7,9 @@ import { UpdatePatientDto } from './dto/update-patient.dto';
 import { PatientResponseDto } from './dto/patient-response.dto';
 import { Patient } from './entities/patient.entity';
 
+/** Violacao de restricao unique do Postgres. */
+const POSTGRES_UNIQUE_VIOLATION = '23505';
+
 @Injectable()
 export class PatientsService {
   constructor(private readonly patientsRepository: PatientsRepository) {}
@@ -24,8 +27,17 @@ export class PatientsService {
       name: dto.name,
       cpf: dto.cpf,
     });
-    const saved = await this.patientsRepository.save(patient);
-    return this.toResponseDto(saved);
+    try {
+      const saved = await this.patientsRepository.save(patient);
+      return this.toResponseDto(saved);
+    } catch (error) {
+      // Corrida entre duas requisicoes, ou CPF de paciente removido
+      // logicamente: a restricao unique do banco (RP04) e quem decide.
+      if ((error as { code?: string }).code === POSTGRES_UNIQUE_VIOLATION) {
+        throw new AppError('CPF_JA_CADASTRADO', 'Este CPF ja esta cadastrado.');
+      }
+      throw error;
+    }
   }
 
   async list(

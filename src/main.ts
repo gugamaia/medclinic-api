@@ -2,9 +2,11 @@ import 'reflect-metadata';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import { DataSource } from 'typeorm';
 import { AppModule } from './app.module';
 import { APIEnv } from './env';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { ensureAdmin } from './seed/ensure-admin';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -26,6 +28,15 @@ async function bootstrap() {
 
   // RP03/RF11 - unico ponto que decide o formato de resposta de erro.
   app.useGlobalFilters(new AllExceptionsFilter());
+
+  // RP07 - o DatabaseModule ja rodou as migrations; agora garante o
+  // primeiro admin (credenciais de ADMIN_* no ambiente). Idempotente, para
+  // que o deploy em plataformas sem shell ja nasca com o admin de avaliacao.
+  await ensureAdmin(app.get(DataSource), {
+    name: configService.getOrThrow<string>('ADMIN_NAME'),
+    email: configService.getOrThrow<string>('ADMIN_EMAIL'),
+    password: configService.getOrThrow<string>('ADMIN_PASSWORD'),
+  });
 
   // RP10 - escuta em 0.0.0.0, nao em localhost, para aceitar trafego
   // externo quando publicada na nuvem.

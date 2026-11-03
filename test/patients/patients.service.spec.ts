@@ -24,6 +24,24 @@ describe('PatientsService (RF02/RN02)', () => {
     ctx = buildService();
   });
 
+  it('traduz a violacao unique do banco em CPF_JA_CADASTRADO (corrida ou paciente removido)', async () => {
+    ctx.patientsRepository.findByCpf.mockResolvedValue(null);
+    ctx.patientsRepository.save.mockRejectedValue({ code: '23505' });
+
+    await expect(
+      ctx.service.create({ name: 'Novo', cpf: '12345678901' }),
+    ).rejects.toMatchObject({ code: 'CPF_JA_CADASTRADO' });
+  });
+
+  it('propaga erros inesperados do banco sem traduzi-los', async () => {
+    ctx.patientsRepository.findByCpf.mockResolvedValue(null);
+    ctx.patientsRepository.save.mockRejectedValue(new Error('falha'));
+
+    await expect(
+      ctx.service.create({ name: 'Novo', cpf: '12345678901' }),
+    ).rejects.toThrow('falha');
+  });
+
   it('rejeita cadastro com CPF ja existente', async () => {
     ctx.patientsRepository.findByCpf.mockResolvedValue({
       id: 5,
