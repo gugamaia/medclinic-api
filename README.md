@@ -184,6 +184,8 @@ npm run seed:admin          # garante que existe ao menos um usuário admin (ide
 
 Em produção, a própria aplicação também roda `runMigrations()` automaticamente na subida (`DatabaseModule`), então o passo manual é mais relevante para desenvolvimento local.
 
+O primeiro administrador (RP07) também é criado na subida da API, logo depois das migrations, com `ADMIN_NAME`/`ADMIN_EMAIL`/`ADMIN_PASSWORD` do ambiente (`src/seed/ensure-admin.ts`, idempotente). Em plataformas sem shell (Render gratuito) não é preciso rodar `seed:admin`.
+
 ## Testes e cobertura
 
 ```bash
@@ -205,7 +207,7 @@ Cenários mínimos exigidos pela Seção 4.5 do enunciado, e onde cada um está:
 | Acesso a prontuário (com/sem vínculo) | `test/medical-records/medical-records.service.spec.ts` |
 | Login (credencial inválida + comparação de hash) | `test/users/users.service.spec.ts` |
 
-A suíte cobre também `patients`, `doctors` (incluindo a transação atômica e a tradução de violação de unique), `calendar` e os dois serviços de `auth` (`jwt.service.ts`, `password.service.ts`), totalizando 78 testes.
+A suíte cobre também `patients`, `doctors` (incluindo a transação atômica e a tradução de violação de unique), `calendar` e os dois serviços de `auth` (`jwt.service.ts`, `password.service.ts`), totalizando 80 testes.
 
 ## Qualidade de código
 
@@ -348,6 +350,11 @@ Prefixo fixo: `/api/v1`. Perfis entre colchetes indicam `@Roles(...)`; sem colch
 
 ## URL pública
 
-`TODO` — preencher com a URL do deploy antes da entrega final.
+- **API publicada:** `https://SEU-SERVICO.onrender.com` (preencher com a URL do Render)
+- **Healthcheck:** `https://SEU-SERVICO.onrender.com/api/v1/health`
 
-//the end
+## Board do projeto
+
+- **Board (GitHub Projects, público):** `https://github.com/users/SEU_USUARIO/projects/N` (preencher com o link do board)
+
+> As credenciais do administrador de avaliação são as variáveis `ADMIN_EMAIL` e `ADMIN_PASSWORD` configuradas no painel do Render; elas são informadas no AVA, nunca no repositório.
