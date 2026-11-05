@@ -98,10 +98,78 @@ export class AllExceptionsFilter implements ExceptionFilter {
       };
     }
 
+    const databaseError = this.fromDatabaseError(exception);
+    if (databaseError) {
+      return databaseError;
+    }
+
     return {
       statusCode: 500,
       error: 'ERRO_INTERNO',
       message: 'Erro interno do servidor.',
+    };
+  }
+
+  /**
+   * Erros do Postgres que a validacao de entrada nao pega antes da
+   * consulta (ids fora do int4, texto invalido, violacao de unique em
+   * corrida). Sao erro do cliente, nao do servidor: nunca viram 500.
+   */
+  private fromDatabaseError(exception: unknown): ErrorEnvelope | null {
+    const dbError = exception as { code?: unknown; detail?: unknown };
+    if (typeof dbError?.code !== 'string') {
+      return null;
+    }
+    const detail = typeof dbError.detail === 'string' ? dbError.detail : '';
+
+    switch (dbError.code) {
+      case '22003': // numeric_value_out_of_range: id maior que o int4
+        return this.fromAppError(
+          new AppError('RECURSO_NAO_ENCONTRADO', 'Recurso nao encontrado.'),
+        );
+      case '22P02': // invalid_text_representation
+      case '22007': // invalid_datetime_format
+      case '22008': // datetime_field_overflow
+        return this.fromAppError(
+          new AppError('DADOS_INVALIDOS', 'Dados de entrada invalidos.'),
+        );
+      case '23503': // foreign_key_violation: referencia inexistente
+        return this.fromAppError(
+          new AppError(
+            'RECURSO_NAO_ENCONTRADO',
+            'Recurso relacionado nao encontrado.',
+          ),
+        );
+      case '23505': // unique_violation
+        if (detail.includes('cpf')) {
+          return this.fromAppError(
+            new AppError('CPF_JA_CADASTRADO', 'Este CPF ja esta cadastrado.'),
+          );
+        }
+        if (detail.includes('crm')) {
+          return this.fromAppError(
+            new AppError('CRM_JA_CADASTRADO', 'Este CRM ja esta cadastrado.'),
+          );
+        }
+        if (detail.includes('email')) {
+          return this.fromAppError(
+            new AppError(
+              'EMAIL_JA_CADASTRADO',
+              'Este e-mail ja esta cadastrado.',
+            ),
+          );
+        }
+        return null;
+      default:
+        return null;
+    }
+  }
+
+  private fromAppError(error: AppError): ErrorEnvelope {
+    return {
+      statusCode: error.statusCode,
+      error: error.code,
+      message: error.message,
     };
   }
 
